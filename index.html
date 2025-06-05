@@ -35,12 +35,42 @@
       const qty = parseInt(document.getElementById("order-qty").value);
       if (!qty) return;
       orders.push({type, qty});
-      const table = document.getElementById("orders");
-      const row = table.insertRow();
-      row.insertCell(0).innerText = type;
-      row.insertCell(1).innerText = qty;
-      updateRisk();
+      <p id="risk-info"></p>
+    async function loadHistory() {
+      const res = await fetch('/history');
+      if (!res.ok) return;
+      const data = await res.json();
+      const table = document.getElementById('history-table');
+      table.innerHTML = '<tr><th>티커</th><th>RSI</th><th>감정</th></tr>';
+      data.forEach(item => {
+        const row = table.insertRow();
+        row.insertCell(0).innerText = item.ticker;
+        row.insertCell(1).innerText = item.rsi;
+        row.insertCell(2).innerText = item.emotion;
+      });
     }
+
+    async function loadRisk() {
+      const res = await fetch('/risk');
+      if (res.ok) {
+        const data = await res.json();
+        document.getElementById('risk-info').innerText = `VaR: ${data.VaR}`;
+      }
+    }
+
+    async function analyze() {
+      await fetch('/trade', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ticker, rsi, emotion})
+      });
+      await loadHistory();
+      await loadRisk();
+
+    document.addEventListener('DOMContentLoaded', () => {
+      loadHistory();
+      loadRisk();
+    });
     function updateRisk() {
       const position = orders.reduce((sum, o) => sum + (o.type === "buy" ? o.qty : -o.qty), 0);
       const returns = [];
