@@ -35,6 +35,8 @@
       const qty = parseInt(document.getElementById("order-qty").value);
       if (!qty) return;
       orders.push({type, qty});
+      <h3>GPT 분석 결과</h3>
+      <p id="gpt-result"></p>
       <p id="risk-info"></p>
     async function loadHistory() {
       const res = await fetch('/history');
@@ -59,6 +61,18 @@
     }
 
     async function analyze() {
+      const gptRes = await fetch('/gpt_comment', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ticker, rsi, emotion})
+      });
+      if (gptRes.ok) {
+        const data = await gptRes.json();
+        document.getElementById('gpt-result').innerText = data.comment;
+      } else {
+        document.getElementById('gpt-result').innerText = 'GPT 오류';
+      }
+
       await fetch('/trade', {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
@@ -67,6 +81,7 @@
       await loadHistory();
       await loadRisk();
 
+      document.getElementById('gpt-result').innerText = '';
     document.addEventListener('DOMContentLoaded', () => {
       loadHistory();
       loadRisk();
