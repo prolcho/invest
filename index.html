@@ -32,6 +32,12 @@
     <canvas id="priceChart" width="400" height="200"></canvas>
   </section>
 
+  <section id="gpt-section">
+    <h2>GPT 분석 결과</h2>
+    <p id="gpt-result"></p>
+    <button onclick="getGptComment()">GPT 분석 요청</button>
+  </section>
+
   <script>
     const samplePrices = [225, 230, 235, 240, 242, 238, 245, 250, 255, 260];
     let orders = [];
@@ -85,6 +91,21 @@
       });
       await loadHistory();
       await loadRisk();
+    }
+
+    async function getGptComment() {
+      const ticker = "TSLA";
+      const rsi = 65;
+      const emotion = "안정";
+      const res = await fetch('/gpt_comment', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ticker, rsi, emotion })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        document.getElementById('gpt-result').innerText = data.comment;
+      }
     }
 
     document.addEventListener('DOMContentLoaded', () => {
