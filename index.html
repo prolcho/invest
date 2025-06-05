@@ -3,9 +3,98 @@
 <head>
   <meta charset="UTF-8">
   <title>투자 판단 도우미</title>
+  <style>
+    body {
+      background: #121212;
+      color: #eee;
+      font-family: sans-serif;
+      margin: 0;
+      padding: 20px;
+    }
+    .container {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      grid-template-rows: auto auto;
+      gap: 20px;
+    }
+    section {
+      background: #1e1e1e;
+      padding: 20px;
+      border-radius: 8px;
+    }
+    input, select, button, textarea {
+      margin-top: 5px;
+      width: 100%;
+      padding: 6px;
+      background: #2a2a2a;
+      color: #eee;
+      border: 1px solid #555;
+      border-radius: 4px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      color: #fff;
+    }
+    th, td {
+      border: 1px solid #555;
+      padding: 6px;
+      text-align: left;
+    }
+    button {
+      cursor: pointer;
+    }
+  </style>
 </head>
 <body>
-  <h1>투자 체크리스트</h1>
-  <p>여기에 UI를 추가할 예정입니다.</p>
+  <h1>투자 판단 도우미</h1>
+  <div class="container">
+    <section id="input-section">
+      <h2>입력</h2>
+      <label>티커 <input id="ticker" placeholder="ex: TSLA"></label>
+      <label>RSI <input id="rsi" type="number" placeholder="0-100"></label>
+      <label>감정 <input id="emotion" placeholder="예: 불안, 낙관"></label>
+      <button onclick="analyze()">분석하기</button>
+    </section>
+    <section id="analysis-section">
+      <h2>분석 결과</h2>
+      <p id="summary"></p>
+      <p id="gpt-feedback"></p>
+    </section>
+    <section id="history-section" style="grid-column:1/ span 2;">
+      <h2>거래 기록</h2>
+      <table id="history-table">
+        <tr><th>티커</th><th>RSI</th><th>감정</th></tr>
+      </table>
+    </section>
+  </div>
+  <script>
+    function analyze() {
+      const ticker = document.getElementById('ticker').value.trim();
+      const rsi = document.getElementById('rsi').value;
+      const emotion = document.getElementById('emotion').value.trim();
+      if (!ticker || rsi === '') return;
+
+      const summary = `종목 ${ticker}의 RSI는 ${rsi}이며 현재 감정은 ${emotion}입니다.`;
+      let feedback = '';
+      const r = parseFloat(rsi);
+      if (r > 70) feedback = '과매수 구간일 수 있으니 주의하세요.';
+      else if (r < 30) feedback = '과매도 구간일 가능성이 있습니다.';
+      else feedback = '중립적인 영역입니다.';
+
+      document.getElementById('summary').innerText = summary;
+      document.getElementById('gpt-feedback').innerText = feedback;
+
+      const table = document.getElementById('history-table');
+      const row = table.insertRow();
+      row.insertCell(0).innerText = ticker;
+      row.insertCell(1).innerText = rsi;
+      row.insertCell(2).innerText = emotion;
+
+      document.getElementById('ticker').value = '';
+      document.getElementById('rsi').value = '';
+      document.getElementById('emotion').value = '';
+    }
+  </script>
 </body>
 </html>
