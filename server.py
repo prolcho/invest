@@ -2,6 +2,10 @@ import json
 import os
 from http.server import HTTPServer, BaseHTTPRequestHandler
 
+import openai
+
+OPENAI_KEY = os.getenv('OPENAI_API_KEY')
+
 DATA_FILE = 'history.json'
 
 
@@ -69,6 +73,39 @@ class Handler(BaseHTTPRequestHandler):
             write_history(history)
             self._set_headers(content='application/json')
             self.wfile.write(json.dumps({'status': 'ok'}).encode())
+        elif self.path == '/gpt_comment':
+            length = int(self.headers.get('Content-Length', 0))
+            body = self.rfile.read(length)
+            try:
+                data = json.loads(body.decode())
+            except json.JSONDecodeError:
+                self._set_headers(400)
+                return
+
+            ticker = data.get('ticker')
+            rsi = data.get('rsi')
+            emotion = data.get('emotion')
+
+            if OPENAI_KEY:
+                openai.api_key = OPENAI_KEY
+                prompt = (
+                    f"티커 {ticker}, RSI {rsi}, 감정 {emotion}일 때 "
+                    "짧은 투자 판단을 2문장 이내로 알려줘."
+                )
+                try:
+                    resp = openai.ChatCompletion.create(
+                        model='gpt-3.5-turbo',
+                        messages=[{'role': 'user', 'content': prompt}],
+                        max_tokens=60
+                    )
+                    comment = resp.choices[0].message['content'].strip()
+                except Exception:
+                    comment = 'GPT 호출 실패'
+            else:
+                comment = 'API 키 미설정'
+
+            self._set_headers(content='application/json')
+            self.wfile.write(json.dumps({'comment': comment}).encode())
         else:
             self._set_headers(404)
 
